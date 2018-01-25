@@ -264,6 +264,12 @@ httpc_set_ca_file(struct httpc_request *req, const char *ca_file)
 }
 
 void
+httpc_set_unix_socket(struct httpc_request *req, const char *unix_socket)
+{
+	curl_easy_setopt(req->curl_request.easy, CURLOPT_UNIX_SOCKET_PATH, unix_socket);
+}
+
+void
 httpc_set_verify_host(struct httpc_request *req, long verify)
 {
 	curl_easy_setopt(req->curl_request.easy, CURLOPT_SSL_VERIFYHOST, verify);
