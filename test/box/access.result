@@ -779,6 +779,18 @@ box.space._user.index.name:delete{'public'}
 ---
 - true
 ...
+box.schema.role.drop('super')
+---
+- error: 'Failed to drop user or role ''super'': the user or the role is a system'
+...
+box.space._user.index.name:delete{'super'}
+---
+- error: 'Failed to drop user or role ''super'': the user has objects'
+...
+#box.schema.role.info('super') > 0
+---
+- true
+...
 -- gh-944 name is too long
 name = string.rep('a', box.schema.NAME_MAX - 1)
 ---

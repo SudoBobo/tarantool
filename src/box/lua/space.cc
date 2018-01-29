@@ -386,6 +386,8 @@ box_lua_space_init(struct lua_State *L)
 	lua_setfield(L, -2, "SYSTEM_USER_ID_MIN");
 	lua_pushnumber(L, BOX_SYSTEM_USER_ID_MAX);
 	lua_setfield(L, -2, "SYSTEM_USER_ID_MAX");
+	lua_pushnumber(L, SUPER);
+	lua_setfield(L, -2, "SUPER_ROLE_ID");
 	lua_pushnumber(L, BOX_INDEX_MAX);
 	lua_setfield(L, -2, "INDEX_MAX");
 	lua_pushnumber(L, BOX_SPACE_MAX);

@@ -306,6 +306,9 @@ box.space._user.index.name:delete{'admin'}
 box.schema.role.drop('public')
 box.space._user.index.name:delete{'public'}
 #box.schema.role.info('public') > 0
+box.schema.role.drop('super')
+box.space._user.index.name:delete{'super'}
+#box.schema.role.info('super') > 0
 
 -- gh-944 name is too long
 name = string.rep('a', box.schema.NAME_MAX - 1)
