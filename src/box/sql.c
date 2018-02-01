@@ -886,8 +886,9 @@ int tarantoolSqlite3RenameTable(int iTab, const char *new_name, char **sql_stmt)
 	return SQLITE_OK;
 
 rename_fail:
+	sqlite3Error(db, SQLITE_ERROR);
 	box_iterator_free(iter);
-	return SQLITE_TARANTOOL_ERROR;
+	return SQLITE_ERROR;
 }
 
 /*
@@ -977,8 +978,9 @@ int tarantoolSqlite3RenameParentTable(int iTab, const char *old_parent_name,
 	return SQLITE_OK;
 
 rename_fail:
+	sqlite3Error(db, SQLITE_ERROR);
 	box_iterator_free(iter);
-	return SQLITE_TARANTOOL_ERROR;
+	return SQLITE_ERROR;
 }
 
 
