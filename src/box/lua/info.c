@@ -228,6 +228,21 @@ lbox_info_ro(struct lua_State *L)
 	return 1;
 }
 
+static int
+lbox_info_wait_ro(struct lua_State *L)
+{
+	int index = lua_gettop(L);
+	if (index < 1 || !lua_isboolean(L, 1))
+		return luaL_error(L, "Usage: box.info.ro.wait(true|false[, timeout])");
+	bool ro = lua_toboolean(L, 1);
+	double timeout = TIMEOUT_INFINITY;
+	if (index > 1)
+		timeout = luaL_checknumber(L, 2);
+	if (box_wait_ro(ro, timeout) != 0)
+		return luaT_error(L);
+	return 0;
+}
+
 /*
  * Tarantool 1.6.x compat
  */
@@ -464,6 +479,12 @@ static const struct luaL_Reg lbox_info_dynamic_meta_v16[] = {
 static int
 lbox_info_index(struct lua_State *L)
 {
+	const char *key = lua_tostring(L, -1);
+	if (strcmp(key, "wait_ro") == 0) {
+		lua_pushcfunction(L, lbox_info_wait_ro);
+		return 1;
+	}
+
 	lua_pushvalue(L, -1);			/* dup key */
 	lua_gettable(L, lua_upvalueindex(1));   /* table[key] */
 

@@ -1,3 +1,5 @@
+fiber = require('fiber')
+
 -- Test Lua from admin console. Whenever producing output,
 -- make sure it's a valid YAML
 box.info.unknown_variable
@@ -29,3 +31,30 @@ box.info().server.id == box.info.id
 box.info().server.uuid == box.info.uuid
 box.info().server.lsn == box.info.lsn
 box.info().ro == box.info.server.ro
+
+--
+-- box.info.wait_ro
+--
+box.info.wait_ro() -- error
+box.info.wait_ro(123) -- error
+box.info.wait_ro(false, "abc") -- error
+box.info.ro -- false
+box.info.wait_ro(false) -- success
+box.info.wait_ro(true, 0.001) -- timeout
+
+status, err = nil
+f = fiber.create(function() status, err = pcall(box.info.wait_ro, true) end)
+fiber.sleep(0.001)
+f:cancel()
+fiber.sleep(0.001)
+status, err -- fiber is cancelled
+
+ch = fiber.channel(1)
+_ = fiber.create(function() box.info.wait_ro(true) ch:put(box.info.ro) end)
+fiber.sleep(0.001)
+box.cfg{read_only = true}
+ch:get() -- true
+_ = fiber.create(function() box.info.wait_ro(false) ch:put(box.info.ro) end)
+fiber.sleep(0.001)
+box.cfg{read_only = false}
+ch:get() -- false

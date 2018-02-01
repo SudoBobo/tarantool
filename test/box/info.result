@@ -1,3 +1,6 @@
+fiber = require('fiber')
+---
+...
 -- Test Lua from admin console. Whenever producing output,
 -- make sure it's a valid YAML
 box.info.unknown_variable
@@ -118,4 +121,79 @@ box.info().server.lsn == box.info.lsn
 box.info().ro == box.info.server.ro
 ---
 - true
+...
+--
+-- box.info.wait_ro
+--
+box.info.wait_ro() -- error
+---
+- error: 'Usage: box.info.ro.wait(true|false[, timeout])'
+...
+box.info.wait_ro(123) -- error
+---
+- error: 'Usage: box.info.ro.wait(true|false[, timeout])'
+...
+box.info.wait_ro(false, "abc") -- error
+---
+- error: 'bad argument #2 to ''?'' (number expected, got string)'
+...
+box.info.ro -- false
+---
+- false
+...
+box.info.wait_ro(false) -- success
+---
+...
+box.info.wait_ro(true, 0.001) -- timeout
+---
+- error: timed out
+...
+status, err = nil
+---
+...
+f = fiber.create(function() status, err = pcall(box.info.wait_ro, true) end)
+---
+...
+fiber.sleep(0.001)
+---
+...
+f:cancel()
+---
+...
+fiber.sleep(0.001)
+---
+...
+status, err -- fiber is cancelled
+---
+- false
+- fiber is cancelled
+...
+ch = fiber.channel(1)
+---
+...
+_ = fiber.create(function() box.info.wait_ro(true) ch:put(box.info.ro) end)
+---
+...
+fiber.sleep(0.001)
+---
+...
+box.cfg{read_only = true}
+---
+...
+ch:get() -- true
+---
+- true
+...
+_ = fiber.create(function() box.info.wait_ro(false) ch:put(box.info.ro) end)
+---
+...
+fiber.sleep(0.001)
+---
+...
+box.cfg{read_only = false}
+---
+...
+ch:get() -- false
+---
+- false
 ...
