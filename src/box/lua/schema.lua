@@ -2194,6 +2194,7 @@ box.once = function(key, func, ...)
     if box.space._schema:get{key} ~= nil then
         return
     end
+    box.info.wait_ro(false)
     box.space._schema:put{key}
     return func(...)
 end
