@@ -175,7 +175,14 @@ for i = 0, 9999 do box.space.test:replace({i, 4, 5, 'test'}) end
 test_run:cmd("create server replica_ack with rpl_master=default, script='replication/replica_ack.lua'")
 test_run:cmd("start server replica_ack")
 test_run:cmd("switch replica_ack")
+-- applier connection timeout is proportional to replication timeout, so since it's very low for this
+-- test case, we should manually set it to new value to allow connection. It should be higher than
+-- default's replication_timeout (0.1)
+box.error.injection.set("ERRINJ_APPLIER_TIMEOUT", 1.)
+fiber = require('fiber')
+fiber.sleep(0.5)
 box.info.replication[1].upstream.status
+
 
 test_run:cmd("stop server default")
 test_run:cmd("deploy server default")

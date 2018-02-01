@@ -45,6 +45,7 @@
 #include "version.h"
 #include "trigger.h"
 #include "xrow_io.h"
+#include "errinj.h"
 #include "error.h"
 #include "session.h"
 
@@ -418,7 +419,16 @@ applier_subscribe(struct applier *applier)
 			applier_set_state(applier, APPLIER_FOLLOW);
 		}
 
-		coio_read_xrow(coio, ibuf, &row);
+		if (applier->version_id < version_id(1, 7, 7))
+			coio_read_xrow(coio, ibuf, &row);
+		else {
+			double timeout = replication_disconnect_timeout();
+			struct errinj *inj = errinj(ERRINJ_APPLIER_TIMEOUT,
+						    ERRINJ_DOUBLE);
+			if (inj != NULL && inj->dparam > 0)
+				timeout = inj->dparam;
+			coio_read_xrow_timeout_xc(coio, ibuf, &row, timeout);
+		}
 
 		if (iproto_type_is_error(row.type))
 			xrow_decode_error_xc(&row);  /* error */

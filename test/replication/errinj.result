@@ -426,6 +426,19 @@ test_run:cmd("switch replica_ack")
 ---
 - true
 ...
+-- applier connection timeout is proportional to replication timeout, so since it's very low for this
+-- test case, we should manually set it to new value to allow connection. It should be higher than
+-- default's replication_timeout (0.1)
+box.error.injection.set("ERRINJ_APPLIER_TIMEOUT", 1.)
+---
+- ok
+...
+fiber = require('fiber')
+---
+...
+fiber.sleep(0.5)
+---
+...
 box.info.replication[1].upstream.status
 ---
 - follow
