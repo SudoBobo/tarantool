@@ -1200,15 +1200,26 @@ vinyl_space_build_secondary_key(struct space *old_space,
 static size_t
 vinyl_space_bsize(struct space *space)
 {
-	(void)space;
-	return 0;
+	struct index *pk_base = space_index(space, 0);
+	if (pk_base == NULL)
+		return 0;
+	struct vy_index *pk = vy_index(pk_base);
+	return pk->stat.memory.count.bytes + pk->stat.disk.count.bytes;
+}
+
+static ssize_t
+vinyl_index_size(struct index *base)
+{
+	struct vy_index *index = vy_index(base);
+	return index->stat.memory.count.rows + index->stat.disk.count.rows;
 }
 
 static ssize_t
 vinyl_index_bsize(struct index *base)
 {
 	struct vy_index *index = vy_index(base);
-	return index->stat.memory.count.bytes;
+	return vy_index_mem_tree_size(index) +
+		index->page_index_size + index->bloom_size;
 }
 
 /* {{{ Public API of transaction control: start/end transaction,
@@ -3998,7 +4009,7 @@ static const struct index_vtab vinyl_index_vtab = {
 	/* .destroy = */ vinyl_index_destroy,
 	/* .commit_create = */ vinyl_index_commit_create,
 	/* .commit_drop = */ vinyl_index_commit_drop,
-	/* .size = */ generic_index_size,
+	/* .size = */ vinyl_index_size,
 	/* .bsize = */ vinyl_index_bsize,
 	/* .min = */ generic_index_min,
 	/* .max = */ generic_index_max,

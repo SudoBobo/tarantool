@@ -309,6 +309,58 @@ stat_diff(gstat(), st, 'tx')
 box.commit()
 stat_diff(gstat(), st, 'tx')
 
+--
+-- space.bsize, index.len, index.bsize
+--
+
+s:truncate()
+s:bsize()
+s.index.pk:len()
+s.index.pk:bsize()
+
+for i = 1, 100, 2 do put(i) end
+st = istat()
+s:bsize()
+s:bsize() == st.memory.bytes
+s.index.pk:len()
+s.index.pk:len() == st.memory.rows
+s.index.pk:bsize()
+s.index.pk:bsize() == st.memory.index_size
+
+box.snapshot()
+st = istat()
+s:bsize()
+s:bsize() == st.disk.bytes
+s.index.pk:len()
+s.index.pk:len() == st.disk.rows
+s.index.pk:bsize()
+s.index.pk:bsize() == st.disk.index_size + st.disk.bloom_size
+
+for i = 1, 100, 2 do s:delete(i) end
+for i = 2, 100, 2 do put(i) end
+st = istat()
+s:bsize()
+s:bsize() == st.memory.bytes + st.disk.bytes
+s.index.pk:len()
+s.index.pk:len() == st.memory.rows + st.disk.rows
+s.index.pk:bsize()
+s.index.pk:bsize() == st.memory.index_size + st.disk.index_size + st.disk.bloom_size
+
+st = istat()
+box.snapshot()
+wait(istat, st, 'disk.compact.count', 1)
+st = istat()
+s:bsize()
+s:bsize() == st.disk.bytes
+s.index.pk:len()
+s.index.pk:len() == st.disk.rows
+s.index.pk:bsize()
+s.index.pk:bsize() == st.disk.index_size + st.disk.bloom_size
+
+s.index.pk:drop()
+s:bsize()
+s:drop()
+
 test_run:cmd('switch default')
 test_run:cmd('stop server test')
 test_run:cmd('cleanup server test')
