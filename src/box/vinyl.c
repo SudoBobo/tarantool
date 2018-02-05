@@ -3993,6 +3993,7 @@ static const struct index_vtab vinyl_index_vtab = {
 	/* .destroy = */ vinyl_index_destroy,
 	/* .commit_create = */ vinyl_index_commit_create,
 	/* .commit_drop = */ vinyl_index_commit_drop,
+	/* .update_def = */ generic_index_update_def,
 	/* .size = */ generic_index_size,
 	/* .bsize = */ vinyl_index_bsize,
 	/* .min = */ generic_index_min,
