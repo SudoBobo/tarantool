@@ -227,8 +227,9 @@ httpc_set_ca_file(struct httpc_request *req, const char *ca_file);
  * endpoint instead of TCP. The application does not have to keep the string
  * around after setting this option.
  * @see https://curl.haxx.se/libcurl/c/CURLOPT_UNIX_SOCKET_PATH.html
+ * @return 0 on success
  */
-void
+int
 httpc_set_unix_socket(struct httpc_request *req, const char *unix_socket);
 
 /**

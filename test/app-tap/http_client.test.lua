@@ -391,18 +391,30 @@ test:test('http over AF_INET', function(test)
 end)
 
 test:test('http over AF_UNIX', function(test)
-    test:plan(8)
-
+    local url = "http://localhost/"
     local tmpname = os.tmpname()
     local sock = tmpname .. '.sock'
+    local ok = pcall(client.get, url, {unix_socket=sock, timeout = 0.01})
+    if ok == false then
+        os.remove(tmpname)
+        return
+    end
+
+    test:plan(8)
+
     test:diag("starting HTTP over UNIX socket '%s...'", sock)
     
     local cmd = string.format("%s/test/app-tap/httpd.py --unix %s",
             TARANTOOL_SRC_DIR, sock)
     local server = io.popen(cmd)
+    if server == nil then
+        test:diag("create server failes")
+        os.remove(tmpname)
+        os.remove(sock)
+        return
+    end
     test:is(server:read("*l"), "heartbeat", "server started")
 
-    local url = "http://localhost/"
     test:diag("trying to connect to %s", url)
     local r
     for i=1,10 do
@@ -428,7 +440,11 @@ test:test('http over AF_UNIX', function(test)
     test:test("basic http post/get", post_and_get_test, url, opts)
     test:test("headers", headers_test, url, opts)
     test:test("special methods", special_methods_test, url, opts)
-    test:test("concurrent", concurrent_test, url, opts)
+    if jit.os == "OSX" then -- due to difference in OSX Unix socket, skip
+        test:skip("concurrent")
+    else
+        test:test("concurrent", concurrent_test, url, opts)
+    end
 
     -- STOP SERVER
     test:diag("stopping HTTP server")
